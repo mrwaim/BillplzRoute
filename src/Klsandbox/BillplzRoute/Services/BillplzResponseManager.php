@@ -4,7 +4,7 @@ namespace Klsandbox\BillplzRoute\Services;
 
 use Klsandbox\BillplzRoute\Models\BillplzResponse;
 use App\Models\Order;
-use App\Models\Product;
+use Klsandbox\OrderModel\Models\Product;
 use Klsandbox\OrderModel\Models\ProductPricing;
 use Klsandbox\OrderModel\Services\OrderManager;
 use Log;
