@@ -1,6 +1,7 @@
 <?php namespace Klsandbox\BillplzRoute;
 
 use Illuminate\Support\ServiceProvider;
+use Klsandbox\SiteConfig\Services\SiteConfig;
 
 class BillplzRouteServiceProvider extends ServiceProvider
 {
@@ -41,6 +42,10 @@ class BillplzRouteServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../../database/migrations/' => database_path('/migrations')
         ], 'migrations');
+
+        SiteConfig::macro('billplz_enabled', function () {
+            return config('billplz.enabled');
+        });
     }
 
     /**
