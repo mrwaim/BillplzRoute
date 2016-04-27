@@ -19,7 +19,7 @@ use Klsandbox\SiteModel\SiteExtensions;
  * @property string $email
  * @property string $mobile
  * @property string $name
- * @property integer $metadata_order_id
+ * @property integer $metadata_proof_of_transfer_id
  * @property integer $metadata_user_id
  * @property integer $metadata_site_id
  * @property string $url
@@ -56,7 +56,7 @@ class BillplzResponse extends Model
     public $timestamps = true;
     protected $fillable = [
         'billplz_id', 'collection_id', 'paid', 'state', 'amount', 'paid_amount', 'due_at', 'email', 'mobile', 'name',
-        'metadata_order_id', 'metadata_user_id', 'metadata_site_id', 'url', 'paid_at'
+        'metadata_proof_of_transfer_id', 'metadata_user_id', 'metadata_site_id', 'url', 'paid_at'
     ];
 
     public static function getCountUserPay($user_id, $date, $end)

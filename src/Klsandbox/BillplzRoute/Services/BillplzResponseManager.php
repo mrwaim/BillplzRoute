@@ -3,9 +3,7 @@
 namespace Klsandbox\BillplzRoute\Services;
 
 use Klsandbox\BillplzRoute\Models\BillplzResponse;
-use App\Models\Order;
-use Klsandbox\OrderModel\Models\Product;
-use Klsandbox\OrderModel\Models\ProductPricing;
+use Klsandbox\OrderModel\Models\ProofOfTransfer;
 use Klsandbox\OrderModel\Services\OrderManager;
 use Log;
 
@@ -73,35 +71,54 @@ class BillplzResponseManager
 
     public function webhook($input)
     {
-        \Log::info('webhook called ' . print_r($input, true));
+        \Log::info('**webhook called ' . print_r($input, true));
         $bill_id = $input['id'];
-        $metadata_order_id = $input['metadata']['order_id'];
+        $metadata_proof_of_transfer_id = $input['metadata']['proof_of_transfer_id'];
         $metadata_user_id = $input['metadata']['user_id'];
         $metadata_site_id = $input['metadata']['site_id'];
 
         unset(
             $input['id'],
-            $input['metadata']['order_id'],
+            $input['metadata']['proof_of_transfer_id'],
             $input['metadata']['user_id'],
             $input['metadata']['site_id'],
             $input['metadata']
         );
 
         @$input['billplz_id'] = $bill_id;
-        @$input['metadata_order_id'] = $metadata_order_id;
+        @$input['metadata_proof_of_transfer_id'] = $metadata_proof_of_transfer_id;
         @$input['metadata_user_id'] = $metadata_user_id;
         @$input['metadata_site_id'] = $metadata_site_id;
 
         BillplzResponse::create($input);
 
-        $product_id = ProductPricing::find(Order::find($metadata_order_id)->product_pricing_id)->product_id;
+        $proofOfTransfer = ProofOfTransfer::find($metadata_proof_of_transfer_id);
+        $order = $proofOfTransfer->order;
 
-        $order = Order::find($metadata_order_id);
+        $hasOther = false;
+        foreach ($order->orderItems as $orderItem)
+        {
+            if ($orderItem->productPricing->product->isOtherProduct())
+            {
+                $hasOther = true;
+            }
+        }
 
-        if ($input['paid'] === 'false') {
+        if ($input['paid'] !== 'true' && $input['paid'] !== 1 && $input['paid'] !== true) {
+            Log::info("paid not true - order:$order->id");
             $this->orderManager->rejectOrder($order);
         } else {
-            if (Product::find($product_id)->name === 'Other') {
+            if ($input['paid_amount'] == 0)
+            {
+                Log::info("paid_amount is 0 - order:$order->id");
+                $this->orderManager->rejectOrder($order);
+            }
+            else if ($input['paid_amount'] != $input['amount'])
+            {
+                Log::info("paid_amount != amount - order:$order->id");
+                $this->orderManager->rejectOrder($order);
+            }
+            else if ($hasOther) {
                 $this->orderManager->setPaymentUploaded($order);
             } else {
                 $this->orderManager->approveOrder($order);
