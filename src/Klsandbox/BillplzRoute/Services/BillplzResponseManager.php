@@ -39,6 +39,10 @@ class BillplzResponseManager
 
         $return = json_decode($result);
 
+        if (!$return) {
+            Log::error('Failed to decode json <' . $result . '>');
+        }
+
         curl_close($curl);
 
         return $return;
@@ -96,29 +100,23 @@ class BillplzResponseManager
         $order = $proofOfTransfer->order;
 
         $hasOther = false;
-        foreach ($order->orderItems as $orderItem)
-        {
-            if ($orderItem->productPricing->product->isOtherProduct())
-            {
+        foreach ($order->orderItems as $orderItem) {
+            if ($orderItem->productPricing->product->isOtherProduct()) {
                 $hasOther = true;
             }
         }
 
-        if ($input['paid'] !== 'true' && $input['paid'] !== 1 && $input['paid'] !== true) {
+        if ($input['paid'] !== 'true' && $input['paid'] !== 1 && $input['paid'] !== true && $input['paid'] !== '1') {
             Log::info("paid not true - order:$order->id");
             $this->orderManager->rejectOrder($order);
         } else {
-            if ($input['paid_amount'] == 0)
-            {
+            if ($input['paid_amount'] == 0) {
                 Log::info("paid_amount is 0 - order:$order->id");
                 $this->orderManager->rejectOrder($order);
-            }
-            else if ($input['paid_amount'] != $input['amount'])
-            {
+            } else if ($input['paid_amount'] != $input['amount']) {
                 Log::info("paid_amount != amount - order:$order->id");
                 $this->orderManager->rejectOrder($order);
-            }
-            else if ($hasOther) {
+            } else if ($hasOther) {
                 $this->orderManager->setPaymentUploaded($order);
             } else {
                 $this->orderManager->approveOrder($order);
