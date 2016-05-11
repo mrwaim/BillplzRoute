@@ -20,6 +20,37 @@ class BillplzResponseManager
         $this->orderManager = $orderManager;
     }
 
+    public function getBill($bill_id)
+    {
+        $curl = curl_init();
+
+        curl_setopt($curl, CURLOPT_URL, config('billplz.bills_url') . '/' . $bill_id);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_POST, 0);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($curl, CURLOPT_USERPWD, config('billplz.auth'));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+        Log::info(curl_getinfo($curl));
+        $result = curl_exec($curl);
+        Log::info($result);
+
+        $return = json_decode($result);
+
+        if (!$return) {
+            Log::error('Failed to decode json <' . $result . '>');
+        }
+
+        curl_close($curl);
+
+        $bill = (array)$return;
+        $bill['metadata'] = (array)$bill['metadata'];
+
+        $bill = $this->prepareBillData($bill);
+
+        return $bill;
+    }
+
     public function createBill($data)
     {
         $data['mobile'] = $this->checkUserMobile($data['mobile']);
@@ -75,7 +106,13 @@ class BillplzResponseManager
 
     public function webhook($input)
     {
-        \Log::info('**webhook called ' . print_r($input, true));
+        $billplzData = $this->parseWebhookData($input);
+        $this->processBillplzData($billplzData);
+    }
+
+    public function prepareBillData($input)
+    {
+        \Log::info('**prepareBillData called ' . print_r($input, true));
         $bill_id = $input['id'];
         $metadata_proof_of_transfer_id = $input['metadata']['proof_of_transfer_id'];
         $metadata_user_id = $input['metadata']['user_id'];
@@ -94,7 +131,35 @@ class BillplzResponseManager
         @$input['metadata_user_id'] = $metadata_user_id;
         @$input['metadata_site_id'] = $metadata_site_id;
 
-        BillplzResponse::create($input);
+        return $input;
+    }
+
+    public function parseWebhookData($input)
+    {
+        $input = $this->prepareBillData($input);
+
+        $verifiedBill = $this->getBill($input['billplz_id']);
+
+        if ($verifiedBill['billplz_id'] != $input['billplz_id']) {
+            \App::abort(403, 'invalid billplz id');
+        }
+
+        if ($verifiedBill['paid_amount'] != $input['paid_amount']) {
+            \App::abort(403, 'invalid paid_amount');
+        }
+
+        if ($verifiedBill['paid'] != $input['paid']) {
+            \App::abort(403, 'invalid paid');
+        }
+
+        return $verifiedBill;
+    }
+
+    public function processBillplzData(array $billplzData)
+    {
+        $metadata_proof_of_transfer_id = $billplzData['metadata_proof_of_transfer_id'];
+
+        BillplzResponse::create($billplzData);
 
         $proofOfTransfer = ProofOfTransfer::find($metadata_proof_of_transfer_id);
         $order = $proofOfTransfer->order;
@@ -106,14 +171,14 @@ class BillplzResponseManager
             }
         }
 
-        if ($input['paid'] !== 'true' && $input['paid'] !== 1 && $input['paid'] !== true && $input['paid'] !== '1') {
+        if ($billplzData['paid'] !== 'true' && $billplzData['paid'] !== 1 && $billplzData['paid'] !== true && $billplzData['paid'] !== '1') {
             Log::info("paid not true - order:$order->id");
             $this->orderManager->rejectOrder($order);
+        } elseif ($billplzData['paid_amount'] == 0) {
+            Log::info("paid_amount is 0 - order:$order->id");
+            $this->orderManager->rejectOrder($order);
         } else {
-            if ($input['paid_amount'] == 0) {
-                Log::info("paid_amount is 0 - order:$order->id");
-                $this->orderManager->rejectOrder($order);
-            } else if ($input['paid_amount'] != $input['amount']) {
+            if ($billplzData['paid_amount'] != $billplzData['amount']) {
                 Log::info("paid_amount != amount - order:$order->id");
                 $this->orderManager->rejectOrder($order);
             } else if ($hasOther) {
