@@ -47,6 +47,7 @@ use Klsandbox\SiteModel\SiteExtensions;
  * @mixin \Eloquent
  * @property integer $site_id
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereSiteId($value)
+ * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereMetadataProofOfTransferId($value)
  */
 class BillplzResponse extends Model
 {
