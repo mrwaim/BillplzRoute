@@ -80,9 +80,9 @@ class BillplzResponseManager
         return $return;
     }
 
-    public function createCollection()
+    public function createCollection($collectionName, $billplzKey)
     {
-        $data = ['title' => config('billplz.title_for_create')];
+        $data = ['title' => $collectionName];
         $curl = curl_init();
 
         curl_setopt($curl, CURLOPT_URL, config('billplz.collections_url'));
@@ -90,7 +90,7 @@ class BillplzResponseManager
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($curl, CURLOPT_USERPWD, config('billplz.auth'));
+        curl_setopt($curl, CURLOPT_USERPWD, $billplzKey);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
         Log::info(curl_getinfo($curl));
