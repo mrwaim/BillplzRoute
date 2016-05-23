@@ -9,7 +9,6 @@ use Klsandbox\BillplzRoute\Services\BillplzResponseManager;
 
 class BillplzController extends Controller
 {
-
     /**
      * @var BillplzResponseManager $billPlzResponseManager
      */

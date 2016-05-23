@@ -7,7 +7,6 @@ use Klsandbox\OrderModel\Models\ProofOfTransfer;
 use Klsandbox\OrderModel\Services\OrderManager;
 use Log;
 
-
 class BillplzResponseManager
 {
     /**
@@ -39,13 +38,14 @@ class BillplzResponseManager
 
         if (!$return) {
             Log::error('Failed to decode json <' . $result . '>');
+
             return;
         }
 
         curl_close($curl);
 
-        $bill = (array)$return;
-        $bill['metadata'] = (array)$bill['metadata'];
+        $bill = (array) $return;
+        $bill['metadata'] = (array) $bill['metadata'];
 
         $bill = $this->prepareBillData($bill);
 
@@ -182,7 +182,7 @@ class BillplzResponseManager
             if ($billplzData['paid_amount'] != $billplzData['amount']) {
                 Log::info("paid_amount != amount - order:$order->id");
                 $this->orderManager->rejectOrder($order);
-            } else if ($hasOther) {
+            } elseif ($hasOther) {
                 $this->orderManager->setPaymentUploaded($order);
             } else {
                 $this->orderManager->approveOrder($order);

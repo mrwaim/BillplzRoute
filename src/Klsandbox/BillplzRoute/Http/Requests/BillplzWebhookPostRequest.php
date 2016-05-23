@@ -29,7 +29,7 @@ class BillplzWebhookPostRequest extends Request
             'state' => 'required',
             'amount' => 'required',
             'due_at' => 'required',
-            'paid_at' => 'required'
+            'paid_at' => 'required',
         ];
     }
 }

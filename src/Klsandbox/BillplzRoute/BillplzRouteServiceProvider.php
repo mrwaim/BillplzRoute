@@ -1,11 +1,12 @@
-<?php namespace Klsandbox\BillplzRoute;
+<?php
+
+namespace Klsandbox\BillplzRoute;
 
 use Illuminate\Support\ServiceProvider;
 use Klsandbox\SiteConfig\Services\SiteConfig;
 
 class BillplzRouteServiceProvider extends ServiceProvider
 {
-
     /**
      * Indicates if loading of the provider is deferred.
      *
@@ -22,7 +23,6 @@ class BillplzRouteServiceProvider extends ServiceProvider
     {
     }
 
-
     public function boot()
     {
         if (!$this->app->routesAreCached()) {
@@ -30,17 +30,17 @@ class BillplzRouteServiceProvider extends ServiceProvider
         }
 
         $this->publishes([
-            __DIR__ . '/../../../config/' => config_path()
+            __DIR__ . '/../../../config/' => config_path(),
         ], 'config');
 
         $this->loadViewsFrom(__DIR__ . '/../../../views/', 'billplz-route');
 
         $this->publishes([
-            __DIR__ . '/../../../views/' => base_path('resources/views/vendor/billplz-route')
+            __DIR__ . '/../../../views/' => base_path('resources/views/vendor/billplz-route'),
         ], 'views');
 
         $this->publishes([
-            __DIR__ . '/../../../database/migrations/' => database_path('/migrations')
+            __DIR__ . '/../../../database/migrations/' => database_path('/migrations'),
         ], 'migrations');
 
         SiteConfig::macro('billplz_enabled', function () {
@@ -57,5 +57,4 @@ class BillplzRouteServiceProvider extends ServiceProvider
     {
         return [];
     }
-
 }

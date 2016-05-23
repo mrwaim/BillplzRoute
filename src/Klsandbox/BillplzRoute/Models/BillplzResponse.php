@@ -26,6 +26,7 @@ use Klsandbox\SiteModel\SiteExtensions;
  * @property string $paid_at
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
+ *
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereId($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse wherePaidAt($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereCreatedAt($value)
@@ -45,7 +46,9 @@ use Klsandbox\SiteModel\SiteExtensions;
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereMetadataSiteId($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereUrl($value)
  * @mixin \Eloquent
+ *
  * @property integer $site_id
+ *
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereSiteId($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereMetadataProofOfTransferId($value)
  */
@@ -57,12 +60,12 @@ class BillplzResponse extends Model
     public $timestamps = true;
     protected $fillable = [
         'billplz_id', 'collection_id', 'paid', 'state', 'amount', 'paid_amount', 'due_at', 'email', 'mobile', 'name',
-        'metadata_proof_of_transfer_id', 'metadata_user_id', 'metadata_site_id', 'url', 'paid_at'
+        'metadata_proof_of_transfer_id', 'metadata_user_id', 'metadata_site_id', 'url', 'paid_at',
     ];
 
     public static function getCountUserPay($user_id, $date, $end)
     {
-        return BillplzResponse
+        return self
             ::forSite()
             ->where('paid', true)
             ->where('created_at', '>=', $date)
