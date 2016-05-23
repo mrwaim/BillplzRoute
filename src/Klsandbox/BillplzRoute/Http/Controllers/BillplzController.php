@@ -28,20 +28,4 @@ class BillplzController extends Controller
     {
         $this->billPlzResponseManager->webhook($request->input());
     }
-
-    public function getNewCollection()
-    {
-        $data = $this->billPlzResponseManager->createCollection();
-
-        if (!$data) {
-            App::abort(500, 'createCollection failed');
-        }
-
-        if (property_exists($data, 'error') && $data->error) {
-            App::abort(500, 'createCollection failed ' . $data->error->type . ' ' . implode(',', $data->error->message));
-        }
-
-        return view('billplz-route::new-collection')
-            ->with('data', $data);
-    }
 }
