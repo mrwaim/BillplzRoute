@@ -2,7 +2,6 @@
 
 namespace Klsandbox\BillplzRoute\Http\Controllers;
 
-use App;
 use App\Http\Controllers\Controller;
 use Klsandbox\BillplzRoute\Http\Requests\BillplzWebhookPostRequest;
 use Klsandbox\BillplzRoute\Services\BillplzResponseManager;
