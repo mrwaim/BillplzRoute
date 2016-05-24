@@ -52,7 +52,7 @@ class BillplzResponseManager
         return $bill;
     }
 
-    public function createBill($data)
+    public function createBill($data, $billplzKey)
     {
         $data['mobile'] = $this->checkUserMobile($data['mobile']);
         $curl = curl_init();
@@ -62,7 +62,7 @@ class BillplzResponseManager
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($curl, CURLOPT_USERPWD, config('billplz.auth'));
+        curl_setopt($curl, CURLOPT_USERPWD, $billplzKey);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
         Log::info(curl_getinfo($curl));
