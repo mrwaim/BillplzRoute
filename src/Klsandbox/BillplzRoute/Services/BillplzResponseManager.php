@@ -23,7 +23,8 @@ class BillplzResponseManager
     {
         $curl = curl_init();
 
-        curl_setopt($curl, CURLOPT_URL, config('billplz.get_bills_url') . '/' . $bill_id);
+        $url = config('billplz.bills_url') . '/' . $bill_id;
+        curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_POST, 0);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
@@ -34,10 +35,11 @@ class BillplzResponseManager
         $result = curl_exec($curl);
         Log::info($result);
 
+        $originalResult = $result;
         $return = json_decode($result);
 
         if (!$return) {
-            Log::error('Failed to decode json <' . $result . '>');
+            Log::error("Failed to decode json <$originalResult> on url:$url");
 
             return;
         }
