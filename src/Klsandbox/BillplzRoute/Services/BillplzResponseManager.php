@@ -3,6 +3,8 @@
 namespace Klsandbox\BillplzRoute\Services;
 
 use Klsandbox\BillplzRoute\Models\BillplzResponse;
+use Klsandbox\OrderModel\Models\OrderStatus;
+use Klsandbox\OrderModel\Models\Product;
 use Klsandbox\OrderModel\Models\ProofOfTransfer;
 use Klsandbox\OrderModel\Services\OrderManager;
 use Log;
@@ -46,8 +48,8 @@ class BillplzResponseManager
 
         curl_close($curl);
 
-        $bill = (array) $return;
-        $bill['metadata'] = (array) $bill['metadata'];
+        $bill = (array)$return;
+        $bill['metadata'] = (array)$bill['metadata'];
 
         $bill = $this->prepareBillData($bill);
 
@@ -161,11 +163,21 @@ class BillplzResponseManager
     public function processBillplzData(array $billplzData)
     {
         $metadata_proof_of_transfer_id = $billplzData['metadata_proof_of_transfer_id'];
+        $billplzId = $billplzData['id'];
+
 
         BillplzResponse::create($billplzData);
 
+        /**
+         * @var $proofOfTransfer ProofOfTransfer
+         */
         $proofOfTransfer = ProofOfTransfer::find($metadata_proof_of_transfer_id);
+
+        assert($proofOfTransfer);
+
         $order = $proofOfTransfer->order;
+
+        assert($order);
 
         $hasOther = false;
         foreach ($order->orderItems as $orderItem) {
@@ -175,19 +187,25 @@ class BillplzResponseManager
         }
 
         if ($billplzData['paid'] !== 'true' && $billplzData['paid'] !== 1 && $billplzData['paid'] !== true && $billplzData['paid'] !== '1') {
-            Log::info("paid not true - order:$order->id");
+            Log::info("paid not true - order:$order->id billplz_id:$billplzId");
             $this->orderManager->rejectOrder($order);
         } elseif ($billplzData['paid_amount'] == 0) {
-            Log::info("paid_amount is 0 - order:$order->id");
+            Log::info("paid_amount is 0 - order:$order->id billplz_id:$billplzId");
             $this->orderManager->rejectOrder($order);
         } else {
             if ($billplzData['paid_amount'] != $billplzData['amount']) {
-                Log::info("paid_amount != amount - order:$order->id");
+                Log::info("paid_amount != amount - order:$order->id billplz_id:$billplzId");
                 $this->orderManager->rejectOrder($order);
             } elseif ($hasOther) {
+                Log::info("has other - order:$order->id billplz_id:$billplzId");
                 $this->orderManager->setPaymentUploaded($order);
             } else {
-                $this->orderManager->approveOrder($order);
+                if ($order->orderStatus->id == OrderStatus::Approved()->id) {
+                    Log::info("order already approved - order:$order->id billplz_id:$billplzId");
+                } else {
+                    Log::info("auto approve - order:$order->id billplz_id:$billplzId");
+                    $this->orderManager->approveOrder($order);
+                }
             }
         }
     }

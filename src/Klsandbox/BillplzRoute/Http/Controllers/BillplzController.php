@@ -25,6 +25,7 @@ class BillplzController extends Controller
 
     public function postWebhook(BillplzWebhookPostRequest $request)
     {
+        \Auth::logout();
         $this->billPlzResponseManager->webhook($request->input());
     }
 }
