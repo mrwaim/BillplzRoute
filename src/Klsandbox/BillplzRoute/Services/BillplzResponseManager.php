@@ -21,7 +21,7 @@ class BillplzResponseManager
         $this->orderManager = $orderManager;
     }
 
-    public function getBill($bill_id)
+    public function getBill($bill_id, $billblz_api_key)
     {
         $curl = curl_init();
 
@@ -30,7 +30,7 @@ class BillplzResponseManager
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_POST, 0);
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($curl, CURLOPT_USERPWD, config('billplz.auth'));
+        curl_setopt($curl, CURLOPT_USERPWD, $billblz_api_key);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
         Log::info(curl_getinfo($curl));
@@ -143,7 +143,18 @@ class BillplzResponseManager
     {
         $input = $this->prepareBillData($input);
 
-        $verifiedBill = $this->getBill($input['billplz_id']);
+        $metadata_proof_of_transfer_id = $input['metadata_proof_of_transfer_id'];
+        assert($metadata_proof_of_transfer_id);
+
+        /**
+         * @var $proofOfTransfer ProofOfTransfer
+         */
+        $proofOfTransfer = ProofOfTransfer::find($metadata_proof_of_transfer_id);
+        assert($proofOfTransfer);
+
+        $billplz_api_key = $proofOfTransfer->order->organization->billplz_key;
+
+        $verifiedBill = $this->getBill($input['billplz_id'], $billplz_api_key);
 
         if ($verifiedBill['billplz_id'] != $input['billplz_id']) {
             \App::abort(403, 'invalid billplz id');
