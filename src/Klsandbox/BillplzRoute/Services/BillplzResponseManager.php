@@ -163,7 +163,7 @@ class BillplzResponseManager
     public function processBillplzData(array $billplzData)
     {
         $metadata_proof_of_transfer_id = $billplzData['metadata_proof_of_transfer_id'];
-        $billplzId = $billplzData['id'];
+        $billplzId = $billplzData['billplz_id'];
 
 
         BillplzResponse::create($billplzData);
