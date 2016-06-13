@@ -215,7 +215,7 @@ class BillplzResponseManager
                     Log::info("order already approved - order:$order->id billplz_id:$billplzId");
                 } else {
                     Log::info("auto approve - order:$order->id billplz_id:$billplzId");
-                    $this->orderManager->approveOrder($order);
+                    $this->orderManager->approveOrder($order->user, $order);
                 }
             }
         }
