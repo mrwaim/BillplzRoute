@@ -48,8 +48,8 @@ class BillplzResponseManager
 
         curl_close($curl);
 
-        $bill = (array)$return;
-        $bill['metadata'] = (array)$bill['metadata'];
+        $bill = (array) $return;
+        $bill['metadata'] = (array) $bill['metadata'];
 
         $bill = $this->prepareBillData($bill);
 
@@ -175,7 +175,6 @@ class BillplzResponseManager
     {
         $metadata_proof_of_transfer_id = $billplzData['metadata_proof_of_transfer_id'];
         $billplzId = $billplzData['billplz_id'];
-
 
         BillplzResponse::create($billplzData);
 
