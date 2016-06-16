@@ -48,8 +48,8 @@ class BillplzResponseManager
 
         curl_close($curl);
 
-        $bill = (array) $return;
-        $bill['metadata'] = (array) $bill['metadata'];
+        $bill = (array)$return;
+        $bill['metadata'] = (array)$bill['metadata'];
 
         $bill = $this->prepareBillData($bill);
 
@@ -212,6 +212,8 @@ class BillplzResponseManager
             } else {
                 if ($order->orderStatus->id == OrderStatus::Approved()->id) {
                     Log::info("order already approved - order:$order->id billplz_id:$billplzId");
+                } elseif ($order->orderStatus->id == OrderStatus::Shipped()->id) {
+                    Log::info("order already shipped - order:$order->id billplz_id:$billplzId");
                 } else {
                     Log::info("auto approve - order:$order->id billplz_id:$billplzId");
                     $this->orderManager->approveOrder($order->user, $order);
