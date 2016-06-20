@@ -2,9 +2,12 @@
 
 namespace Klsandbox\BillplzRoute\Services;
 
+use App\Models\Organization;
+use App\Models\User;
+use App\Services\ProductPricingManager\ProductPricingManagerInterface;
+use App\Services\UserManager;
 use Klsandbox\BillplzRoute\Models\BillplzResponse;
 use Klsandbox\OrderModel\Models\OrderStatus;
-use Klsandbox\OrderModel\Models\Product;
 use Klsandbox\OrderModel\Models\ProofOfTransfer;
 use Klsandbox\OrderModel\Services\OrderManager;
 use Log;
@@ -16,9 +19,21 @@ class BillplzResponseManager
      */
     protected $orderManager;
 
-    public function __construct(OrderManager $orderManager)
+    /**
+     * @var UserManager $userManager
+     */
+    protected $userManager;
+
+    /**
+     * @var ProductPricingManagerInterface $productPricingManager
+     */
+    protected $productPricingManager;
+
+    public function __construct(OrderManager $orderManager, UserManager $userManager, ProductPricingManagerInterface $productPricingManager)
     {
         $this->orderManager = $orderManager;
+        $this->userManager = $userManager;
+        $this->productPricingManager = $productPricingManager;
     }
 
     public function getBill($bill_id, $billblz_api_key)
@@ -59,6 +74,9 @@ class BillplzResponseManager
     public function createBill($data, $billplzKey)
     {
         $data['mobile'] = $this->checkUserMobile($data['mobile']);
+
+        Log::info('createBill', $data);
+
         $curl = curl_init();
 
         curl_setopt($curl, CURLOPT_URL, config('billplz.bills_url'));
@@ -220,6 +238,94 @@ class BillplzResponseManager
                 }
             }
         }
+    }
+
+
+    /**
+     * @param \Klsandbox\OrderModel\Models\Order $order
+     * @param User $user
+     * @param OrderPostRequest $request
+     * @param UserManager $userManager
+     * @param $totalAmount
+     * @param ProofOfTransfer $proofOfTransfer
+     * @param BillplzResponseManager $billPlzResponseManager
+     * @return mixed
+     */
+    public function createOnlineBill(\Klsandbox\OrderModel\Models\Order $order)
+    {
+        $user = $order->user;
+        $proofOfTransfer = $order->proofOfTransfer;
+        $organization = $order->is_hq ? Organization::HQ() : $user->organization;
+
+        $productPricings = $order->orderItems()->get()->pluck('productPricing')->all();
+        $hasOrganizationMembership = $this->productPricingManager->hasOrganizationMembership($productPricings);
+
+        if (!$organization && $hasOrganizationMembership) {
+            $organization = $this->userManager->getMembershipOrganization($user);
+        }
+
+        assert($organization);
+        $billplzKey = $organization->billplz_key;
+        $billplzCollectionId = $organization->billplz_collection_id;
+
+        if (config('billplz.is_test'))
+        {
+            $billplzKey = config('billplz.auth');
+            $billplzCollectionId = config('billplz.collection_id');
+        }
+
+
+        if (!$billplzKey) {
+            \App::abort(500, 'Billplz key not defined');
+        }
+        if (!$billplzCollectionId) {
+            \App::abort(500, 'Billplz Colection id not defined');
+        }
+
+        $billData = [
+            'collection_id' => $billplzCollectionId,
+            'email' => $user->email,
+            'name' => $user->name,
+            'mobile' => $user->phone,
+            'amount' => $proofOfTransfer->amount * 100,
+            'callback_url' => url('/billplz/webhook'),
+            'redirect_url' => url('/order-management/view/' . $order->id),
+            'metadata[proof_of_transfer_id]' => $proofOfTransfer->id,
+            'metadata[user_id]' => $order->user_id,
+            'metadata[site_id]' => $order->site_id,
+        ];
+
+        $description = [];
+
+        foreach ($order->orderItems as $orderItem) {
+            $description [] = $orderItem->productPricing->product->name;
+        }
+
+        $billData['metadata[ ]'] = implode('; ', $description);
+
+        $bill = $this->createBill($billData, $billplzKey);
+
+        if (!$bill) {
+            \App::abort(500, 'createBill failed - null');
+        }
+
+        if (property_exists($bill, 'error') && $bill->error) {
+            $message = 'no message';
+            if (is_array($bill->error->message)) {
+                $message = implode(',', $bill->error->message);
+            } elseif (is_string($bill->error->message)) {
+                $message = $bill->error->message;
+            }
+
+            \App::abort(500, 'createBill failed ' . $bill->error->type . ' ' . $message);
+        }
+
+        $redirect_to = $bill->url;
+
+        $order->bill_url = $redirect_to;
+        $order->save();
+
+        return $redirect_to;
     }
 
     private function checkUserMobile($mobile)
