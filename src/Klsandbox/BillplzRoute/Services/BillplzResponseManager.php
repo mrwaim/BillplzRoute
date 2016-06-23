@@ -240,7 +240,6 @@ class BillplzResponseManager
         }
     }
 
-
     /**
      * @param \Klsandbox\OrderModel\Models\Order $order
      * @param User $user
@@ -268,12 +267,10 @@ class BillplzResponseManager
         $billplzKey = $organization->billplz_key;
         $billplzCollectionId = $organization->billplz_collection_id;
 
-        if (config('billplz.is_test'))
-        {
+        if (config('billplz.is_test')) {
             $billplzKey = config('billplz.auth');
             $billplzCollectionId = config('billplz.collection_id');
         }
-
 
         if (!$billplzKey) {
             \App::abort(500, 'Billplz key not defined');
