@@ -302,7 +302,7 @@ class BillplzResponseManager
             'collection_id' => $billplzCollectionId,
             'email' => $user->email,
             'name' => $user->name,
-            'mobile' => $user->phone,
+            'mobile' => null, //$user->phone,
             'amount' => $proofOfTransfer->amount * 100,
             'callback_url' => url('/billplz/webhook'),
             'redirect_url' => url('/order-management/view/' . $order->id),
