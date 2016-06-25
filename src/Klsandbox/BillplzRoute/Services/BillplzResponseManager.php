@@ -38,6 +38,8 @@ class BillplzResponseManager
 
     public function getBill($bill_id, $billblz_api_key)
     {
+        assert($billblz_api_key != null);
+
         $curl = curl_init();
 
         $url = config('billplz.bills_url') . '/' . $bill_id;
@@ -64,7 +66,16 @@ class BillplzResponseManager
         curl_close($curl);
 
         $bill = (array)$return;
-        $bill['metadata'] = (array)$bill['metadata'];
+
+        if (key_exists('error', $bill))
+        {
+            \App::abort(500, 'Billplz error message:' . $bill['error']->message . ' type:' . $bill['error']->type);
+        }
+
+        if (key_exists('metadata', $bill))
+        {
+            $bill['metadata'] = (array)$bill['metadata'];
+        }
 
         $bill = $this->prepareBillData($bill);
 
@@ -137,9 +148,17 @@ class BillplzResponseManager
     {
         \Log::info('**prepareBillData called ' . print_r($input, true));
         $bill_id = $input['id'];
-        $metadata_proof_of_transfer_id = $input['metadata']['proof_of_transfer_id'];
-        $metadata_user_id = $input['metadata']['user_id'];
-        $metadata_site_id = $input['metadata']['site_id'];
+
+        $metadata_proof_of_transfer_id = null;
+        $metadata_user_id = null;
+        $metadata_site_id = null;
+
+        if (key_exists('metadata', $input))
+        {
+            $metadata_proof_of_transfer_id = $input['metadata']['proof_of_transfer_id'];
+            $metadata_user_id = $input['metadata']['user_id'];
+            $metadata_site_id = $input['metadata']['site_id'];
+        }
 
         unset(
             $input['id'],
