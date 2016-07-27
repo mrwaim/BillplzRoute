@@ -3,8 +3,6 @@
 namespace Klsandbox\BillplzRoute\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Klsandbox\SiteModel\SiteExtensions;
-
 /**
  * Klsandbox\BillplzRoute\Models\BillplzResponse
  *
@@ -51,8 +49,6 @@ use Klsandbox\SiteModel\SiteExtensions;
  */
 class BillplzResponse extends Model
 {
-    use SiteExtensions;
-
     protected $table = 'billplz_responses';
     public $timestamps = true;
     protected $fillable = [
@@ -62,9 +58,7 @@ class BillplzResponse extends Model
 
     public static function getCountUserPay($user_id, $date, $end)
     {
-        return self
-            ::forSite()
-            ->where('paid', true)
+        return self::where('paid', true)
             ->where('created_at', '>=', $date)
             ->where('created_at', '<=', $end)
             ->where('metadata_user_id', $user_id)

@@ -6,6 +6,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Services\ProductPricingManager\ProductPricingManagerInterface;
 use App\Services\UserManager;
+use Illuminate\Support\Facades\Auth;
 use Klsandbox\BillplzRoute\Models\BillplzResponse;
 use Klsandbox\OrderModel\Models\OrderStatus;
 use Klsandbox\OrderModel\Models\ProofOfTransfer;
@@ -298,6 +299,12 @@ class BillplzResponseManager
             \App::abort(500, 'Billplz Colection id not defined');
         }
 
+        $redirectUrl = url('/order-management/view/' . $order->id);
+
+        if(! Auth::user()){
+            $redirectUrl = url('order-now/'.$order->user->getRouteKey());
+        }
+
         $billData = [
             'collection_id' => $billplzCollectionId,
             'email' => $user->email,
@@ -305,7 +312,7 @@ class BillplzResponseManager
             'mobile' => null, //$user->phone,
             'amount' => $proofOfTransfer->amount * 100,
             'callback_url' => url('/billplz/webhook'),
-            'redirect_url' => url('/order-management/view/' . $order->id),
+            'redirect_url' => $redirectUrl,
             'metadata[proof_of_transfer_id]' => $proofOfTransfer->id,
             'metadata[user_id]' => $order->user_id,
             'metadata[site_id]' => $order->site_id,
