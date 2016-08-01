@@ -151,13 +151,11 @@ class BillplzResponseManager
 
         $metadata_proof_of_transfer_id = null;
         $metadata_user_id = null;
-        $metadata_site_id = null;
 
         if (key_exists('metadata', $input))
         {
             $metadata_proof_of_transfer_id = $input['metadata']['proof_of_transfer_id'];
             $metadata_user_id = $input['metadata']['user_id'];
-            $metadata_site_id = $input['metadata']['site_id'];
         }
 
         unset(
@@ -171,7 +169,6 @@ class BillplzResponseManager
         @$input['billplz_id'] = $bill_id;
         @$input['metadata_proof_of_transfer_id'] = $metadata_proof_of_transfer_id;
         @$input['metadata_user_id'] = $metadata_user_id;
-        @$input['metadata_site_id'] = $metadata_site_id;
 
         return $input;
     }

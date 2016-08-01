@@ -3,7 +3,6 @@
 namespace Klsandbox\BillplzRoute\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Klsandbox\SiteModel\SiteExtensions;
 
 /**
  * Klsandbox\BillplzRoute\Models\BillplzResponse
@@ -21,7 +20,6 @@ use Klsandbox\SiteModel\SiteExtensions;
  * @property string $name
  * @property integer $metadata_proof_of_transfer_id
  * @property integer $metadata_user_id
- * @property integer $metadata_site_id
  * @property string $url
  * @property string $paid_at
  * @property \Carbon\Carbon $created_at
@@ -42,29 +40,23 @@ use Klsandbox\SiteModel\SiteExtensions;
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereName($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereMetadataOrderId($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereMetadataUserId($value)
- * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereMetadataSiteId($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereUrl($value)
  * @mixin \Eloquent
- * @property integer $site_id
- * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereSiteId($value)
  * @method static \Illuminate\Database\Query\Builder|\Klsandbox\BillplzRoute\Models\BillplzResponse whereMetadataProofOfTransferId($value)
  */
 class BillplzResponse extends Model
 {
-    use SiteExtensions;
-
     protected $table = 'billplz_responses';
     public $timestamps = true;
     protected $fillable = [
         'billplz_id', 'collection_id', 'paid', 'state', 'amount', 'paid_amount', 'due_at', 'email', 'mobile', 'name',
-        'metadata_proof_of_transfer_id', 'metadata_user_id', 'metadata_site_id', 'url', 'paid_at',
+        'metadata_proof_of_transfer_id', 'metadata_user_id', 'url', 'paid_at',
     ];
 
     public static function getCountUserPay($user_id, $date, $end)
     {
         return self
-            ::forSite()
-            ->where('paid', true)
+            ::where('paid', true)
             ->where('created_at', '>=', $date)
             ->where('created_at', '<=', $end)
             ->where('metadata_user_id', $user_id)
