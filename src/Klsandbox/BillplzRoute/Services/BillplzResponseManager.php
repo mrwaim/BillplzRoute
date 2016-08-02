@@ -305,7 +305,6 @@ class BillplzResponseManager
             'redirect_url' => url('/order-management/view/' . $order->id),
             'metadata[proof_of_transfer_id]' => $proofOfTransfer->id,
             'metadata[user_id]' => $order->user_id,
-            'metadata[site_id]' => $order->site_id,
         ];
 
         $description = [];
