@@ -225,7 +225,7 @@ class BillplzResponseManager
 
         $hasOther = false;
         foreach ($order->orderItems as $orderItem) {
-            if ($orderItem->productPricing->product->isOtherProduct()) {
+            if ($orderItem->product->isOtherProduct()) {
                 $hasOther = true;
             }
         }
@@ -272,8 +272,8 @@ class BillplzResponseManager
         $proofOfTransfer = $order->proofOfTransfer;
         $organization = $order->is_hq ? Organization::HQ() : $user->organization;
 
-        $productPricings = $order->orderItems()->get()->pluck('productPricing')->all();
-        $hasOrganizationMembership = $this->productPricingManager->hasOrganizationMembership($productPricings);
+        $products = $order->orderItems()->get()->pluck('product')->all();
+        $hasOrganizationMembership = $this->productPricingManager->hasOrganizationMembership($products);
 
         if (!$organization && $hasOrganizationMembership) {
             $organization = $this->userManager->getMembershipOrganization($user);
@@ -310,7 +310,7 @@ class BillplzResponseManager
         $description = [];
 
         foreach ($order->orderItems as $orderItem) {
-            $description [] = $orderItem->productPricing->product->name;
+            $description [] = $orderItem->product->name;
         }
 
         $billData['metadata[ ]'] = implode('; ', $description);
