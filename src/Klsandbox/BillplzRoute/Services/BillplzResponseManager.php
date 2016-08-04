@@ -4,7 +4,7 @@ namespace Klsandbox\BillplzRoute\Services;
 
 use App\Models\Organization;
 use App\Models\User;
-use App\Services\ProductPricingManager\ProductPricingManagerInterface;
+use App\Services\ProductManager\ProductManagerInterface;
 use App\Services\UserManager;
 use Klsandbox\BillplzRoute\Models\BillplzResponse;
 use Klsandbox\OrderModel\Models\OrderStatus;
@@ -25,15 +25,15 @@ class BillplzResponseManager
     protected $userManager;
 
     /**
-     * @var ProductPricingManagerInterface $productPricingManager
+     * @var ProductManagerInterface $productManager
      */
-    protected $productPricingManager;
+    protected $productManager;
 
-    public function __construct(OrderManager $orderManager, UserManager $userManager, ProductPricingManagerInterface $productPricingManager)
+    public function __construct(OrderManager $orderManager, UserManager $userManager, ProductManagerInterface $producManager)
     {
         $this->orderManager = $orderManager;
         $this->userManager = $userManager;
-        $this->productPricingManager = $productPricingManager;
+        $this->productManager = $producManager;
     }
 
     public function getBill($bill_id, $billblz_api_key)
@@ -225,7 +225,7 @@ class BillplzResponseManager
 
         $hasOther = false;
         foreach ($order->orderItems as $orderItem) {
-            if ($orderItem->productPricing->product->isOtherProduct()) {
+            if ($orderItem->product->isOtherProduct()) {
                 $hasOther = true;
             }
         }
@@ -272,8 +272,8 @@ class BillplzResponseManager
         $proofOfTransfer = $order->proofOfTransfer;
         $organization = $order->is_hq ? Organization::HQ() : $user->organization;
 
-        $productPricings = $order->orderItems()->get()->pluck('productPricing')->all();
-        $hasOrganizationMembership = $this->productPricingManager->hasOrganizationMembership($productPricings);
+        $products = $order->orderItems()->get()->pluck('product')->all();
+        $hasOrganizationMembership = $this->productManager->hasOrganizationMembership($products);
 
         if (!$organization && $hasOrganizationMembership) {
             $organization = $this->userManager->getMembershipOrganization($user);
@@ -310,7 +310,7 @@ class BillplzResponseManager
         $description = [];
 
         foreach ($order->orderItems as $orderItem) {
-            $description [] = $orderItem->productPricing->product->name;
+            $description [] = $orderItem->product->name;
         }
 
         $billData['metadata[ ]'] = implode('; ', $description);
