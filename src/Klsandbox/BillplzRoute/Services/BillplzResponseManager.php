@@ -67,13 +67,11 @@ class BillplzResponseManager
 
         $bill = (array)$return;
 
-        if (key_exists('error', $bill))
-        {
+        if (key_exists('error', $bill)) {
             \App::abort(500, 'Billplz error message:' . $bill['error']->message . ' type:' . $bill['error']->type);
         }
 
-        if (key_exists('metadata', $bill))
-        {
+        if (key_exists('metadata', $bill)) {
             $bill['metadata'] = (array)$bill['metadata'];
         }
 
@@ -152,8 +150,7 @@ class BillplzResponseManager
         $metadata_proof_of_transfer_id = null;
         $metadata_user_id = null;
 
-        if (key_exists('metadata', $input))
-        {
+        if (key_exists('metadata', $input)) {
             $metadata_proof_of_transfer_id = $input['metadata']['proof_of_transfer_id'];
             $metadata_user_id = $input['metadata']['user_id'];
         }
