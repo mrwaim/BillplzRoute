@@ -295,7 +295,7 @@ class BillplzResponseManager
 
         $redirectUrl = url('/order-management/view/' . $order->id);
 
-        if (! Auth::user()) {
+        if ($order->proofOfTransfer->is_public_order) {
             $redirectUrl = url('order-now/'.$user->getRouteKey());
         }
         $billData = [
